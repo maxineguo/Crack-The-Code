@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Decoder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c;
+            color: #e2e8f0;
+        }
+        .container {
+            max-width: 960px;
+        }
+        .code-box {
+            background-color: #2d3748;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+        .letter-box {
+            width: 4rem;
+            height: 4rem;
+            background-color: #4a5568;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+        .ascii-table td {
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .ascii-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 50;
+            opacity: 0;
+            transform: scale(0.95);
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .ascii-panel.visible {
+            opacity: 1;
+            transform: scale(1);
+            visibility: visible;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div class="container mx-auto">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-center mb-6 text-yellow-400">Binary Decoder Game</h1>
+
+        <!-- Level Indicator -->
+        <div class="text-center text-lg mb-6">
+            <span class="font-bold">Level:</span> <span id="level-display" class="text-xl">1</span> of 5
+        </div>
+
+        <!-- Game Content Section -->
+        <div class="code-box mb-6">
+            <div id="game-container">
+                <p id="instructions" class="text-lg mb-4 text-center"></p>
+                <div id="binary-code-container" class="flex flex-wrap justify-center items-center space-x-2 sm:space-x-3 space-y-2 text-xl font-mono mb-8 text-center break-all">
+                    <!-- Binary code will be dynamically inserted here -->
+                </div>
+
+                <div id="input-area" class="flex flex-col items-center">
+                    <p class="text-center text-lg mb-4">Enter the secret message below:</p>
+                    <div id="answer-grid" class="flex flex-wrap justify-center gap-2">
+                        <!-- Answer boxes will be dynamically inserted here -->
+                    </div>
+                </div>
+
+                <div class="text-center mt-8">
+                    <button id="submit-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                        Submit
+                    </button>
+                    <button id="next-level-button" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 hidden">
+                        Next Level
+                    </button>
+                </div>
+            </div>
+
+            <!-- Message Box -->
+            <div id="message-box" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75 hidden">
+                <div class="bg-white p-8 rounded-lg shadow-lg text-center text-gray-900 max-w-sm mx-4">
+                    <p id="message-text" class="text-xl mb-4"></p>
+                    <button id="message-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ASCII Key Toggle Button -->
+    <button id="ascii-toggle-button" class="fixed bottom-4 right-4 bg-purple-600 hover:bg-purple-700 text-white font-bold p-4 rounded-full shadow-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 z-40">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+    </button>
+
+    <!-- ASCII Key Panel -->
+    <div id="ascii-key-panel" class="ascii-panel">
+        <div class="code-box max-w-4xl mx-auto w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold">ASCII Key</h2>
+                <button id="ascii-close-button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded-lg transition-colors">
+                    Close
+                </button>
+            </div>
+            <table class="w-full text-sm sm:text-base border-collapse border border-gray-600 ascii-table">
+                <thead>
+                    <tr class="bg-gray-700">
+                        <th class="border border-gray-600 p-2 text-left">Character</th>
+                        <th class="border border-gray-600 p-2 text-left">Binary</th>
+                    </tr>
+                </thead>
+                <tbody id="ascii-key-body">
+                    <!-- ASCII key will be dynamically inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const levels = [
+                "binary is fun",
+                "This sentence has UPPERCASE letters",
+                "Hexadecimal and binary code are a mix of LETTERS, NUMB3RS, and 5YMB0L5",
+                "This is some binary with symbols including (95).",
+                "If you can read this, you are a binary wizard! YOU ARE AWESOME -- 3,333 - 2,657 - 7,54 - -,(.+-./), and the winner is you, for translating this sentence with ease!"
+            ];
+            
+            const asciiMap = {
+                // Uppercase letters
+                'A': '01000001', 'B': '01000010', 'C': '01000011', 'D': '01000100', 'E': '01000101',
+                'F': '01000110', 'G': '01000111', 'H': '01001000', 'I': '01001001', 'J': '01001010',
+                'K': '01001011', 'L': '01001100', 'M': '01001101', 'N': '01001110', 'O': '01001111',
+                'P': '01010000', 'Q': '01010001', 'R': '01010010', 'S': '01010011', 'T': '01010100',
+                'U': '01010101', 'V': '01010110', 'W': '01010111', 'X': '01011000', 'Y': '01011001',
+                'Z': '01011010',
+                // Lowercase letters
+                'a': '01100001', 'b': '01100010', 'c': '01100011', 'd': '01100100', 'e': '01100101',
+                'f': '01100110', 'g': '01100111', 'h': '01101000', 'i': '01101001', 'j': '01101010',
+                'k': '01101011', 'l': '01101100', 'm': '01101101', 'n': '01101110', 'o': '01101111',
+                'p': '01110000', 'q': '01110001', 'r': '01110010', 's': '01110011', 't': '01110100',
+                'u': '01110101', 'v': '01110110', 'w': '01110111', 'x': '01111000', 'y': '01111001',
+                'z': '01111010',
+                // Numbers
+                '0': '00110000', '1': '00110001', '2': '00110010', '3': '00110011', '4': '00110100',
+                '5': '00110101', '6': '00110110', '7': '00110111', '8': '00111000', '9': '00111001',
+                // Symbols
+                ' ': '00100000', '!': '00100001', '(': '00101000', ')': '00101001', ',': '00101100', '.': '00101110', '?': '00111111',
+                '=': '00111101', '+': '00101011', '-': '00101101', '/': '00101111'
+            };
+
+            let currentLevel = 0;
+            let currentSentence = "";
+            let binaryCode = [];
+            const totalLevels = levels.length;
+
+            const levelDisplay = document.getElementById('level-display');
+            const instructionsEl = document.getElementById('instructions');
+            const binaryCodeContainer = document.getElementById('binary-code-container');
+            const answerGrid = document.getElementById('answer-grid');
+            const submitButton = document.getElementById('submit-button');
+            const nextLevelButton = document.getElementById('next-level-button');
+            const messageBox = document.getElementById('message-box');
+            const messageText = document.getElementById('message-text');
+            const messageButton = document.getElementById('message-button');
+            const asciiToggleButton = document.getElementById('ascii-toggle-button');
+            const asciiKeyPanel = document.getElementById('ascii-key-panel');
+            const asciiCloseButton = document.getElementById('ascii-close-button');
+
+            // Function to show a custom message box
+            function showMessage(text) {
+                messageText.textContent = text;
+                messageBox.classList.remove('hidden');
+                messageBox.classList.add('flex');
+            }
+
+            // Function to hide the custom message box
+            function hideMessage() {
+                messageBox.classList.remove('flex');
+                messageBox.classList.add('hidden');
+            }
+            messageButton.addEventListener('click', hideMessage);
+
+            // Populate the ASCII key table
+            function populateAsciiKey() {
+                const asciiKeyBody = document.getElementById('ascii-key-body');
+                for (const [char, code] of Object.entries(asciiMap)) {
+                    const tr = document.createElement('tr');
+                    tr.classList.add('border', 'border-gray-600');
+                    const charTd = document.createElement('td');
+                    charTd.classList.add('border', 'border-gray-600', 'p-2');
+                    charTd.textContent = char === ' ' ? '[space]' : char;
+                    const binaryTd = document.createElement('td');
+                    binaryTd.classList.add('border', 'border-gray-600', 'p-2');
+                    binaryTd.textContent = code;
+                    tr.appendChild(charTd);
+                    tr.appendChild(binaryTd);
+                    asciiKeyBody.appendChild(tr);
+                }
+            }
+
+            // Toggle the ASCII key menu
+            function toggleAsciiKey(show) {
+                if (show) {
+                    asciiKeyPanel.classList.add('visible');
+                } else {
+                    asciiKeyPanel.classList.remove('visible');
+                }
+            }
+            asciiToggleButton.addEventListener('click', () => toggleAsciiKey(true));
+            asciiCloseButton.addEventListener('click', () => toggleAsciiKey(false));
+
+            // Set up a new level
+            function setupLevel(level) {
+                if (level >= totalLevels) {
+                    showMessage('Congratulations! You have completed all levels and cracked the code. For your prize, say the code "Hack" to me!');
+                    submitButton.classList.add('hidden');
+                    nextLevelButton.classList.add('hidden');
+                    return;
+                }
+
+                levelDisplay.textContent = level + 1;
+                currentLevel = level;
+                currentSentence = levels[level];
+                binaryCode = [];
+                let binarySentence = "";
+
+                // Convert sentence to binary
+                for (const char of currentSentence) {
+                    binaryCode.push(asciiMap[char]);
+                    binarySentence += asciiMap[char] + ' ';
+                }
+                
+                // Update instructions and binary code display
+                instructionsEl.textContent = `Instructions: Decode the following binary message.`;
+                binaryCodeContainer.textContent = binarySentence.trim();
+
+                // Create input boxes for the answer
+                answerGrid.innerHTML = '';
+                for (let i = 0; i < currentSentence.length; i++) {
+                    const char = currentSentence[i];
+                    if (char === ' ') {
+                        const spacer = document.createElement('div');
+                        spacer.classList.add('w-8', 'h-8'); // Add a small spacer for visual separation
+                        answerGrid.appendChild(spacer);
+                        continue;
+                    }
+                    
+                    const letterBox = document.createElement('input');
+                    letterBox.classList.add('letter-box', 'bg-gray-700', 'text-white', 'text-center', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+                    letterBox.maxLength = 1;
+                    
+                    // Add event listener for auto-focus
+                    letterBox.addEventListener('input', () => {
+                        if (letterBox.value.length === 1) {
+                            const inputBoxes = Array.from(answerGrid.querySelectorAll('input:not([disabled])'));
+                            const currentIndex = inputBoxes.indexOf(letterBox);
+                            if (currentIndex < inputBoxes.length - 1) {
+                                inputBoxes[currentIndex + 1].focus();
+                            }
+                        }
+                    });
+
+                    answerGrid.appendChild(letterBox);
+                }
+                submitButton.classList.remove('hidden');
+                nextLevelButton.classList.add('hidden');
+            }
+
+            // Refactored submission logic into a single function
+            function checkAnswer() {
+                let userGuess = '';
+                const inputBoxes = answerGrid.querySelectorAll('input:not([disabled])');
+                inputBoxes.forEach(input => {
+                    userGuess += input.value;
+                });
+                
+                const expectedAnswer = currentSentence.replace(/ /g, '');
+                
+                if (userGuess === expectedAnswer) {
+                    if (currentLevel === totalLevels - 1) {
+                        showMessage('Congratulations! You have completed all levels and cracked the code. For your prize, say the code "Hack" to me!');
+                        submitButton.classList.add('hidden');
+                        nextLevelButton.classList.add('hidden');
+                    } else {
+                        showMessage("Correct! You've cracked the code. Proceed to the next level.");
+                        submitButton.classList.add('hidden');
+                        nextLevelButton.classList.remove('hidden');
+                    }
+                } else {
+                    showMessage("Incorrect. Please try again!");
+                    // Clear the input fields for another attempt
+                    inputBoxes.forEach(input => input.value = '');
+                }
+            }
+
+            // Handle submission via button click
+            submitButton.addEventListener('click', checkAnswer);
+
+            // Handle submission via Enter key press and Backspace
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    if (messageBox.classList.contains('hidden')) {
+                         checkAnswer();
+                    }
+                } else if (e.key === 'Backspace') {
+                    const inputBoxes = Array.from(answerGrid.querySelectorAll('input'));
+                    const focusedElement = document.activeElement;
+                    const focusedIndex = inputBoxes.indexOf(focusedElement);
+                    
+                    if (focusedElement.tagName === 'INPUT' && focusedIndex > 0) {
+                        if (focusedElement.value === '') {
+                             inputBoxes[focusedIndex - 1].focus();
+                        }
+                    }
+                }
+            });
+
+
+            // Handle next level button click
+            nextLevelButton.addEventListener('click', () => {
+                hideMessage();
+                setupLevel(currentLevel + 1);
+            });
+
+            // Initial setup
+            populateAsciiKey();
+            setupLevel(0);
+        });
+    </script>
+
+</body>
+</html>
